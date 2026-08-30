@@ -1,0 +1,62 @@
+---
+title: Local disk
+description: Store recipes on a mounted directory — no bucket, no credentials.
+sidebar:
+  label: Local disk
+  order: 1
+---
+
+The default driver, and the simplest option for a single-machine setup.
+Recipery writes directly to a directory, so mount a volume (or a
+`PersistentVolumeClaim` on Kubernetes) to persist it across restarts.
+
+<Steps>
+  <Step title="Leave STORAGE_DRIVER unset, or set it to local">
+    It's the default.
+  </Step>
+  <Step title="Mount a volume at /app/.data">
+    Or set `LOCAL_STORAGE_PATH` to mount somewhere else.
+  </Step>
+  <Step title="Start the container">
+    Recipes persist across restarts as long as the volume does.
+  </Step>
+</Steps>
+
+## Configuration
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `STORAGE_DRIVER` | Yes | `local` — also the default if unset |
+| `LOCAL_STORAGE_PATH` | No | Defaults to `./.data`, resolved against `/app` — leave it as-is and mount `/app/.data` |
+
+## Docker
+
+```sh
+docker run -d \
+  --name recipery \
+  -p 3000:3000 \
+  -v recipery_data:/app/.data \
+  -e STORAGE_DRIVER=local \
+  ghcr.io/recipery-dev/recipery:latest
+```
+
+<Aside type="caution" title="Mount the volume">
+  Skip the `-v` flag and every recipe disappears the next time the
+  container is recreated — the writable layer isn't persisted.
+</Aside>
+
+## When not to use it
+
+The local driver ties recipe data to one container's (or pod's)
+filesystem — there's no way for a second instance to see the same files.
+That rules it out for:
+
+- Cloudflare Workers, which have no writable filesystem at all — use
+  [Cloudflare R2](/storage/cloudflare-r2) instead
+- Any deployment you want to scale past one replica — use
+  [S3](/storage/s3) or [R2](/storage/cloudflare-r2), which every instance
+  can read and write concurrently
+
+See [Deploy with Docker](/deployment/docker) for how this fits into a full
+container setup, or [Deploy on Kubernetes](/deployment/kubernetes) for the
+`PersistentVolumeClaim` version.

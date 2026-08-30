@@ -1,0 +1,91 @@
+---
+title: Profiles
+description: List, create, edit, and switch between profiles.
+sidebar:
+  order: 2
+---
+
+See [Profiles & Access](/features/profiles) for what a profile is; see
+[Authentication](/api/overview#authentication) for how the active-profile
+cookie works.
+
+## `GET /api/profiles`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Lists every profile on the install. Password hashes are never included —
+each profile carries `hasPassword: boolean` instead.
+
+**Response**
+
+```json
+{
+  "profiles": [
+    { "id": "default", "name": "Profile 1", "color": "bg-blue-500", "role": "admin", "hasPassword": false, "createdAt": "2026-01-01T00:00:00.000Z" }
+  ]
+}
+```
+
+## `POST /api/profiles`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Admin only" variant="danger" size="medium" />
+
+Creates a new profile.
+
+**Request body**
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Trimmed; rejected if empty |
+| `role` | `"admin" \| "reader"` | No | Defaults to `"reader"` |
+
+**Response:** `201` with `{ "profile": PublicProfile }`
+
+## `PATCH /api/profiles/:id`
+
+<Badge text="PATCH" variant="warning" size="medium" /> <Badge text="Self or admin" variant="default" size="medium" />
+
+Edits a profile. Editing your own profile is always allowed; editing
+someone else's requires an admin session. Changing `role` always requires
+an admin session, even on your own profile.
+
+**Request body** — all fields optional, only send what's changing:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `name` | string | |
+| `color` | string | One of the Tailwind classes in `PROFILE_COLORS` |
+| `role` | `"admin" \| "reader"` | Admin session required |
+| `password` | string | Min 4 characters. Sets or changes the profile's password |
+| `currentPassword` | string | Required alongside `password` when editing your **own** already-locked profile — not required when an admin resets someone else's |
+| `removePassword` | boolean | Clears the profile's password |
+
+**Response:** `{ "profile": PublicProfile }`, or `401` if `currentPassword`
+doesn't match, `400` if the new password is under 4 characters.
+
+## `DELETE /api/profiles/:id`
+
+<Badge text="DELETE" variant="danger" size="medium" /> <Badge text="Admin only" variant="danger" size="medium" />
+
+Deletes a profile and everything scoped to it (collections, ratings,
+favorites, cooking state). Refuses with `400` if this would delete the
+only remaining profile, or the only remaining admin.
+
+**Response:** `{ "ok": true }`
+
+## `POST /api/profiles/active`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="No session required" variant="default" size="medium" />
+
+Switches the active profile — this is Recipery's sign-in. Sets the
+`recipery_profile` cookie (1 year, `SameSite=Lax`) on success.
+
+**Request body**
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `id` | string | Yes | Profile ID to switch to |
+| `password` | string | Only if the profile has one set | Verified against the stored hash |
+
+**Response:** `{ "profile": PublicProfile }`, or `401` if the profile is
+password-protected and the password is missing or wrong.

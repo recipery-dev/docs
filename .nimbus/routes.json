@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "base": "/",
+  "knownRoutes": [
+    "/",
+    "/404",
+    "/api/collections",
+    "/api/other-endpoints",
+    "/api/overview",
+    "/api/profiles",
+    "/api/recipes",
+    "/api/settings",
+    "/deployment",
+    "/deployment/cloudflare",
+    "/deployment/docker",
+    "/deployment/kubernetes",
+    "/features",
+    "/features/collections",
+    "/features/import",
+    "/features/library",
+    "/features/profiles",
+    "/storage",
+    "/storage/cloudflare-r2",
+    "/storage/local",
+    "/storage/s3"
+  ],
+  "opaqueNamespaces": []
+}

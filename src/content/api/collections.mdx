@@ -1,0 +1,74 @@
+---
+title: Collections
+description: List, create, edit, delete collections, and add or remove recipes from them.
+sidebar:
+  order: 4
+---
+
+Collections are scoped to the active profile — see
+[Collections](/features/collections). Every endpoint here operates on
+the active profile's own collections; there's no way to read or edit
+another profile's collections through this API.
+
+## `GET /api/collections`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Lists the active profile's collections, seeding the five default
+collections on first call if none exist yet.
+
+**Response:** `{ "collections": Collection[] }`
+
+## `POST /api/collections`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Creates a collection.
+
+**Request body**
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Trimmed; rejected if empty |
+| `color` | string | No | Assigned automatically if omitted |
+
+**Response:** `201` with `{ "collection": Collection }`
+
+## `PATCH /api/collections/:id`
+
+<Badge text="PATCH" variant="warning" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Renames or recolors a collection. Both fields optional.
+
+**Request body:** `{ "name"?: string, "color"?: string }`
+
+**Response:** `{ "collection": Collection }`, or `404` if the collection
+doesn't exist.
+
+## `DELETE /api/collections/:id`
+
+<Badge text="DELETE" variant="danger" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Deletes a collection. Recipes in it aren't affected — they just stop
+being in that collection.
+
+**Response:** `{ "ok": true }`
+
+## `POST /api/collections/:id/recipes`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Adds a recipe to the collection.
+
+**Request body:** `{ "recipeId": string }`
+
+**Response:** `{ "collections": Collection[] }` — every collection for
+the active profile, reflecting the change.
+
+## `DELETE /api/collections/:id/recipes/:recipeId`
+
+<Badge text="DELETE" variant="danger" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Removes a recipe from the collection.
+
+**Response:** `{ "collections": Collection[] }`

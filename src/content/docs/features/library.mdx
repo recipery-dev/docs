@@ -1,0 +1,49 @@
+---
+title: Library & Recipes
+description: Add recipes by hand or import them, scale servings, and keep track of what you've cooked.
+sidebar:
+  label: Library & Recipes
+  order: 1
+---
+
+<Steps>
+  <Step title="Add a recipe">
+    Fill in the form yourself, or [import one from a URL](/features/import)
+    instead.
+  </Step>
+  <Step title="Cook it">
+    Scale the servings up or down, work through the steps, then mark it
+    cooked.
+  </Step>
+  <Step title="Organize and find it again">
+    Rate it, favorite it, add it to a [collection](/features/collections),
+    or pull it back up later with search.
+  </Step>
+</Steps>
+
+## Adding a recipe
+
+A recipe has a title (the only required field), an optional hero photo,
+description, servings, prep/cook time, difficulty (easy/medium/hard),
+cuisine, and tags, plus a list of ingredients (quantity, unit, name, note)
+and steps (text, with an optional photo per step). Uploaded photos are
+capped by the server's image size limit — see [Settings](/api/settings).
+
+## Cooking
+
+- The servings control scales every ingredient quantity up or down —
+  whole numbers, simple fractions ("1/2"), and mixed numbers ("1 1/2")
+  scale cleanly; anything else is left as-is rather than mangled
+- Mark a recipe **cooked** to stamp it with today's date and surface it
+  under Recently Cooked
+
+## Organizing and finding a recipe
+
+- Rate any recipe 1–5 stars, or favorite it
+- Search by title from the search dialog
+- On a shared install, a recipe's detail panel shows **Cooking Activity** —
+  which other profiles have cooked, rated, or favorited it
+
+## Removing a recipe
+
+Deleting a recipe is admin-only — see [Profiles & Access](/features/profiles).

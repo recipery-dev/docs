@@ -1,0 +1,44 @@
+---
+title: Import from a URL
+description: Paste a recipe URL and Recipery scrapes the title, ingredients, steps, and photo automatically.
+sidebar:
+  label: Import from a URL
+  order: 4
+---
+
+<Steps>
+  <Step title="Paste a URL">
+    Any page that publishes a recipe — most cooking sites do.
+  </Step>
+  <Step title="Recipery scrapes it">
+    Title, ingredients, steps, servings, prep/cook time, cuisine, tags,
+    and the hero photo, pulled from the page automatically.
+  </Step>
+  <Step title="Review and save">
+    The imported recipe lands in your library like any other — edit
+    anything before or after saving.
+  </Step>
+</Steps>
+
+## How it works
+
+- Recipery reads the [schema.org `Recipe`](https://schema.org/Recipe)
+  JSON-LD most recipe sites already embed for Google's rich-results
+  snippets — no site-specific scraper needed
+- If the page has no `Recipe` JSON-LD, the import fails with an error
+  rather than guessing
+- The hero photo is downloaded and stored alongside the recipe; if the
+  photo fails to download, the import still succeeds without one
+- The imported recipe records its source (site or author name) and the
+  original URL, shown on the recipe itself
+
+<Aside type="tip" title="Identify your requests">
+  Set `RECIPERY_CONTACT` (an email or contact URL) on the server — it's
+  sent as part of the `User-Agent` on every import request, so sites
+  seeing a lot of your imports have a way to reach you if something looks
+  off. See the environment reference in
+  [Deploy with Docker](/deployment/docker#environment-reference).
+</Aside>
+
+Prefer typing a recipe in yourself, or a site doesn't publish structured
+data? See [Library & Recipes](/features/library) for adding one by hand.

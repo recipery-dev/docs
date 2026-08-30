@@ -1,0 +1,110 @@
+---
+title: Recipes
+description: Add, import, list, edit, delete recipes, and read cooking activity.
+sidebar:
+  order: 3
+---
+
+See [Library & Recipes](/features/library) and
+[Import from a URL](/features/import) for what these operations do in
+the UI. A recipe's `id` is a slug derived from its title (deduplicated
+with a numeric suffix on collision), not a UUID.
+
+## `GET /api/recipes`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Lists every recipe in the library — the shared record only, with no
+per-profile rating, favorite, or cooked status attached (that state lives
+separately; see `PATCH /api/recipes/:id` below).
+
+**Response:** `{ "recipes": RecipeRecord[] }`
+
+## `POST /api/recipes`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Creates a recipe by hand. `multipart/form-data`:
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `title` | string | Yes | |
+| `source` | string | No | Author or site name |
+| `sourceUrl` | string | No | |
+| `description` | string | No | |
+| `servings` | number | No | |
+| `prepMinutes` | number | No | |
+| `cookMinutes` | number | No | |
+| `difficulty` | `"easy" \| "medium" \| "hard"` | No | |
+| `cuisine` | string | No | |
+| `tags` | JSON string | No | JSON array of strings |
+| `ingredients` | JSON string | No | JSON array of `{ quantity?, unit?, name, note? }` |
+| `steps` | JSON string | No | JSON array of `{ id?, text }` |
+| `image` | file | No | Hero photo; rejected with `413` past the server's upload size limit — see [Settings](/api/settings) |
+| `step-image-<stepId>` | file | No | One field per step that has a photo, keyed by that step's `id` in the `steps` JSON |
+
+**Response:** `201` with `{ "recipe": RecipeRecord }`, or `400` if
+`title` is missing, `413` if a photo is too large.
+
+## `POST /api/recipes/import`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Imports a recipe from a URL — see [Import from a URL](/features/import)
+for how the scraper works.
+
+**Request body:** `{ "url": string }`
+
+**Response:** `201` with `{ "recipe": RecipeRecord }`, `400` if `url` is
+missing or not http/https, or `422` if the page has no scrapeable recipe.
+
+## `POST /api/recipes/:id/edit`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Updates an existing recipe. Same fields as `POST /api/recipes` above.
+Steps whose photo isn't being replaced should echo back their current
+`hasImage`/`imageExt` in the `steps` JSON — the server diffs against the
+existing record and deletes any now-orphaned step photos.
+
+**Response:** `{ "recipe": RecipeRecord }`, or `404` if the recipe
+doesn't exist, `400` if `title` is missing, `413` if a photo is too
+large.
+
+## `PATCH /api/recipes/:id`
+
+<Badge text="PATCH" variant="warning" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Updates the **active profile's** state for one recipe — rating,
+favorite, and cooked status all live per-profile, not on the shared
+recipe record.
+
+**Request body** — all fields optional:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `rating` | integer 0–5 | `0` clears the rating |
+| `favorite` | boolean | |
+| `cooked` | boolean | Setting it `true` also stamps `lastCookedAt` |
+
+**Response:** `{ "recipe": Recipe }` — the recipe merged with the active
+profile's state.
+
+## `DELETE /api/recipes/:id`
+
+<Badge text="DELETE" variant="danger" size="medium" /> <Badge text="Admin only" variant="danger" size="medium" />
+
+Deletes the recipe's files from storage, removes it from the index, and
+clears every profile's state for it.
+
+**Response:** `{ "ok": true }`
+
+## `GET /api/recipes/:id/activity`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Lists other profiles (excluding the active one) that have cooked, rated,
+or favorited this recipe — powers the "Cooking Activity" panel on a
+shared install.
+
+**Response:** `{ "activity": [{ "profileId": string, "name": string, "color": string, "cooked": boolean, "rating"?: number }] }`

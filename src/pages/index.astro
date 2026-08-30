@@ -1,0 +1,92 @@
+---
+import DocsLayout from "../layouts/DocsLayout.astro";
+import { LinkButton } from "../components/ui/link-button";
+import { Card } from "../components/ui/card";
+import { CardGrid } from "../components/ui/card-grid";
+import { Aside } from "../components/ui/aside";
+import { Code } from "../components/ui/code";
+import { getSidebar } from "@cloudflare/nimbus-docs";
+import { config } from "virtual:nimbus/config";
+
+const sidebar = await getSidebar("/", { collection: "docs" });
+
+const quickstart = `docker run -d \\
+  --name recipery \\
+  -p 3000:3000 \\
+  -v recipery_data:/app/.data \\
+  -e STORAGE_DRIVER=local \\
+  ghcr.io/recipery-dev/recipery:latest`;
+---
+
+<DocsLayout title={config.title} description={config.description} sidebar={sidebar} headings={[]} breadcrumbs={[]}>
+  <Fragment slot="pagination" />
+  <Fragment slot="page-title">
+    <div class="py-4 sm:py-8">
+      <div class="relative size-14 shrink-0 overflow-hidden">
+        <img
+          src={`${import.meta.env.BASE_URL}logo/mark.png`}
+          alt=""
+          width="56"
+          height="56"
+          class="absolute inset-0 size-full object-contain"
+        />
+      </div>
+      <h1
+        class="mt-5 text-foreground leading-tight [text-wrap:balance]"
+        style="font-size: clamp(2.25rem, 4vw, 2.75rem); font-weight: var(--nb-h1-weight); letter-spacing: var(--nb-h1-tracking);"
+      >
+        Self-hosted recipe manager, no database required
+      </h1>
+      <p class="mt-3 max-w-xl text-[1.0625rem] text-muted-foreground leading-relaxed [text-wrap:pretty]">
+        Recipery reads and writes straight to object storage — local disk, S3, or
+        Cloudflare R2. Import recipes from any URL, organize them into
+        collections, and cook with confidence.
+      </p>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <LinkButton href="/deployment/docker" variant="primary" size="lg" icon>
+          Get started
+        </LinkButton>
+        <LinkButton
+          href="https://github.com/recipery-dev/recipery"
+          variant="outline"
+          size="lg"
+          target="_blank"
+          rel="noopener"
+        >
+          View on GitHub
+        </LinkButton>
+      </div>
+    </div>
+  </Fragment>
+
+  <h2>Quickstart</h2>
+  <p>Run Recipery against the local filesystem — no bucket, no credentials:</p>
+  <Code code={quickstart} lang="sh" meta='title="Terminal"' />
+  <p>Open <a href="http://localhost:3000">localhost:3000</a> and create your first profile.</p>
+
+  <Aside type="tip" title="Deploying for real?">
+    The quickstart above stores recipes on a Docker volume. See <a href="/deployment/docker">Deploy
+    with Docker</a> for S3 and Cloudflare R2 setup — same image, different environment variables.
+    Deploying to <a href="/deployment/cloudflare">Cloudflare</a> instead? See
+    <a href="/deployment">Deployment</a>.
+  </Aside>
+
+  <h2>What you get</h2>
+  <CardGrid>
+    <Card title="No database" icon="ph:database">
+      Object storage is the only persistence layer — nothing to provision, back
+      up, or migrate.
+    </Card>
+    <Card title="Multi-profile" icon="ph:users">
+      Admin and reader roles, with optional per-profile passwords.
+    </Card>
+    <Card title="Import from any URL" icon="ph:link">
+      Paste a link and Recipery scrapes the title, ingredients, steps, and photo
+      straight from the page.
+    </Card>
+    <Card title="Pluggable storage" icon="ph:hard-drives">
+      Local filesystem or any S3-compatible bucket, with a configurable prefix
+      for sharing a bucket with other apps.
+    </Card>
+  </CardGrid>
+</DocsLayout>

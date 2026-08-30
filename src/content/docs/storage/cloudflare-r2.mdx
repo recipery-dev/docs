@@ -1,0 +1,81 @@
+---
+title: Cloudflare R2
+description: Store recipes in Cloudflare R2 — over the S3-compatible API, or a native binding on Workers.
+sidebar:
+  label: Cloudflare R2
+  order: 3
+---
+
+R2 is S3-compatible, so outside of Cloudflare Workers it runs through the
+same `s3` driver as any other S3-compatible store — point `S3_ENDPOINT` at
+your account's R2 API and go. On Workers, it uses a second, native driver
+instead, described below.
+
+## S3-compatible mode (Docker, Kubernetes, anywhere)
+
+<Steps>
+  <Step title="Create a bucket">
+    In the Cloudflare dashboard, go to **R2 Object Storage** and create a
+    bucket (for example, `recipery`).
+  </Step>
+  <Step title="Create API credentials">
+    From the bucket's **Settings**, create an **API token** scoped to R2,
+    with **Object Read & Write** permissions. Note the **Access Key ID**,
+    **Secret Access Key**, and your **Account ID**.
+  </Step>
+  <Step title="Run the container">
+    ```sh
+    docker run -d \
+      --name recipery \
+      -p 3000:3000 \
+      -e STORAGE_DRIVER=s3 \
+      -e S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com \
+      -e S3_BUCKET=recipery \
+      -e S3_ACCESS_KEY=<YOUR_ACCESS_KEY> \
+      -e S3_SECRET_KEY=<YOUR_SECRET_KEY> \
+      ghcr.io/recipery-dev/recipery:latest
+    ```
+  </Step>
+</Steps>
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `STORAGE_DRIVER` | Yes | `s3` — the native `r2` binding mode only works when Recipery itself runs on Cloudflare Workers |
+| `S3_ENDPOINT` | Yes | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
+| `S3_BUCKET` | Yes | Bucket name |
+| `S3_ACCESS_KEY` | Yes | R2 API token access key ID |
+| `S3_SECRET_KEY` | Yes | R2 API token secret access key |
+| `S3_REGION` | No | Leave unset — R2 uses `auto` |
+| `S3_PREFIX` | No | Scope Recipery's data under a subdirectory of a shared bucket |
+
+## Native R2 binding (Workers only)
+
+Recipery has a second driver, `STORAGE_DRIVER=r2`, that talks to R2
+through a Workers binding rather than the S3 API. It only exists for
+deploying Recipery itself to Cloudflare Workers — a Docker or Kubernetes
+deployment always reaches R2 over the S3-compatible API above, since it
+doesn't have a binding to use.
+
+This mode is configured entirely in `wrangler.jsonc`, not environment
+variables — see [Deploy to Cloudflare](/deployment/cloudflare) for the
+full setup.
+
+<Steps>
+  <Step title="Create a bucket">
+    In the Cloudflare dashboard, under **R2 Object Storage**.
+  </Step>
+  <Step title="Add it to wrangler.jsonc">
+    Set `r2_buckets[].bucket_name` to the bucket, and
+    `vars.STORAGE_DRIVER` to `r2`.
+  </Step>
+  <Step title="Deploy">
+    `pnpm deploy:cloudflare` — see
+    [Deploy to Cloudflare](/deployment/cloudflare) for the full walkthrough.
+  </Step>
+</Steps>
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `STORAGE_DRIVER` | Yes | `r2` |
+| `R2_BUCKET_BINDING` | No | Defaults to `RECIPERY_BUCKET` — must match the `binding` name in `wrangler.jsonc`'s `r2_buckets` |
+| `S3_PREFIX` | No | Scope Recipery's data under a subdirectory of a shared bucket |

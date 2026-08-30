@@ -1,0 +1,131 @@
+---
+title: Deploy with Docker
+description: Run Recipery in a container with Docker or Docker Compose.
+sidebar:
+  label: Docker
+  order: 1
+  badge: Start here
+---
+
+Recipery ships as a single container. Object storage is the only
+persistence layer — no database, no schema, nothing to migrate — so
+deploying is really just: pick where the recipes live, then start the
+container.
+
+<Steps>
+  <Step title="Pick a storage backend">
+    [Local disk](/storage/local) needs nothing extra; [S3](/storage/s3) or
+    [Cloudflare R2](/storage/cloudflare-r2) need a bucket and credentials.
+  </Step>
+  <Step title="Run the container">
+    `docker run` or `docker compose up`, with `STORAGE_DRIVER` and that
+    backend's env vars set.
+  </Step>
+  <Step title="Open Recipery">
+    Visit `http://localhost:3000` and create your first profile — it
+    becomes the admin.
+  </Step>
+</Steps>
+
+## Prerequisites
+
+- Docker Engine 24+ (or Docker Desktop), with the Compose plugin if you're
+  using `docker compose`
+- A storage backend — local disk needs nothing extra; [S3](/storage/s3) or
+  [Cloudflare R2](/storage/cloudflare-r2) need a bucket and a set of
+  credentials
+
+<Aside type="note" title="No database service">
+  You will not find a database in any of the examples below. Recipery
+  reads and writes recipes, photos, and profile data straight to the
+  storage backend you configure.
+</Aside>
+
+## Run the container
+
+Every backend runs through the same image — only the environment variables
+change. `STORAGE_DRIVER` selects which one: `local` (default), or `s3` for
+any S3-compatible store, including Cloudflare R2.
+
+```sh
+docker run -d \
+  --name recipery \
+  -p 3000:3000 \
+  -v recipery_data:/app/.data \
+  -e STORAGE_DRIVER=local \
+  ghcr.io/recipery-dev/recipery:latest
+```
+
+The command above uses the local driver — see [Local disk](/storage/local)
+for the volume-mount details. For [S3](/storage/s3) or
+[Cloudflare R2](/storage/cloudflare-r2), swap the `-e STORAGE_DRIVER=local`
+and `-v` flags for that backend's environment variables; the rest of the
+`docker run` stays the same.
+
+## Or use Docker Compose
+
+For anything past a one-off `docker run`, put the environment in a
+`docker-compose.yml` instead:
+
+```yaml title="docker-compose.yml"
+services:
+  app:
+    image: ghcr.io/recipery-dev/recipery:latest
+    ports:
+      - "3000:3000"
+    environment:
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+      S3_BUCKET: recipery
+      S3_ACCESS_KEY: <YOUR_ACCESS_KEY>
+      S3_SECRET_KEY: <YOUR_SECRET_KEY>
+    restart: unless-stopped
+```
+
+Swap the `environment:` block for whichever backend you picked — add a
+`volumes:` entry instead if you're using the local driver.
+
+```sh
+docker compose up -d
+```
+
+<Aside type="tip" title="Trying the S3 path without a real bucket">
+  Recipery's own repo ships a `docker-compose.yml` that starts the app
+  alongside a local MinIO instance and creates the bucket automatically.
+  Clone [the repo](https://github.com/recipery-dev/recipery) and run
+  `docker compose up`.
+</Aside>
+
+## Health checks
+
+The container exposes `GET /api/health`, which checks connectivity to the
+configured storage backend and returns `200 {"status":"ok"}` or
+`503 {"status":"error", "message": "..."}`. Wire it into Compose or your
+orchestrator:
+
+```yaml
+healthcheck:
+  test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+  interval: 30s
+  timeout: 5s
+  retries: 3
+```
+
+## Open Recipery
+
+Visit `http://localhost:3000`. The first profile you create becomes an
+admin; additional profiles can be added from settings, with optional
+per-profile passwords.
+
+## Environment reference
+
+| Variable            | Default | Notes                                                              |
+| -------------------- | ------- | -------------------------------------------------------------------- |
+| `STORAGE_DRIVER`     | `local` | `local` or `s3` — see [Storage](/storage) for backend-specific vars |
+| `RECIPERY_CONTACT`   | —       | Email or contact URL, sent as part of the `User-Agent` on [recipe imports](/features/import) |
+
+<Aside type="tip" title="Identify your import requests">
+  Set `RECIPERY_CONTACT` to an email or contact URL — sites hosting a lot
+  of your [URL imports](/features/import) have a way to reach you if
+  something looks off.
+</Aside>

@@ -1,0 +1,37 @@
+---
+title: Storage
+description: Storage backends Recipery can use — local disk, S3, or Cloudflare R2.
+sidebar:
+  order: 2
+---
+
+Object storage is Recipery's only persistence layer — recipes, photos,
+collections, and profile data all live there, with no separate database.
+One environment variable, `STORAGE_DRIVER`, picks the backend; everything
+else runs through the same container image or Worker.
+
+<CardGrid>
+  <Card title="Local disk" icon="ph:hard-drive">
+    Write straight to a mounted directory. Simplest option, single instance
+    only. See [Local disk](/storage/local).
+  </Card>
+  <Card title="S3" icon="ph:cloud-arrow-up">
+    AWS S3, or any S3-compatible store — MinIO, Backblaze B2, R2. See
+    [S3](/storage/s3).
+  </Card>
+  <Card title="Cloudflare R2" icon="ph:cloud-check">
+    Runs through the S3 driver everywhere except Cloudflare Workers, which
+    get a native binding instead. See [Cloudflare R2](/storage/cloudflare-r2).
+  </Card>
+</CardGrid>
+
+## Choosing a backend
+
+| Backend | `STORAGE_DRIVER` | Multi-instance safe | Needs a bucket |
+| --- | --- | --- | --- |
+| [Local disk](/storage/local) | `local` | No — one pod/container only | No |
+| [S3](/storage/s3) | `s3` | Yes | Yes |
+| [Cloudflare R2](/storage/cloudflare-r2) | `s3` (Docker/Kubernetes) or `r2` (Workers) | Yes | Yes |
+
+This is a deployment-independent choice — see [Deployment](/deployment) for
+how each platform runs the container itself.

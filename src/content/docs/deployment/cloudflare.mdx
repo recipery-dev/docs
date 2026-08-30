@@ -1,0 +1,116 @@
+---
+title: Deploy to Cloudflare
+description: Run Recipery as a Cloudflare Worker, backed by a native R2 binding.
+sidebar:
+  label: Cloudflare
+  order: 2
+---
+
+Recipery can run as a Cloudflare Worker instead of a container, using the
+[OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare) to build
+the Next.js app for the Workers runtime. This path doesn't use Docker at
+all — you're deploying from a checkout of the app's source.
+
+<Steps>
+  <Step title="Create an R2 bucket">
+    In the Cloudflare dashboard, under **R2 Object Storage**.
+  </Step>
+  <Step title="Set the binding in wrangler.jsonc">
+    Point `r2_buckets` at the bucket, and set `STORAGE_DRIVER: r2` under
+    `vars`.
+  </Step>
+  <Step title="Build and deploy">
+    `pnpm deploy:cloudflare` builds the app and pushes the Worker.
+  </Step>
+</Steps>
+
+<Aside type="note" title="R2 only, and a different driver mode">
+  On Workers, storage always goes through R2 — but via a **native binding**
+  (`STORAGE_DRIVER=r2`), not the S3-compatible API that Docker and
+  Kubernetes deployments use. The binding mode only exists here, because it
+  requires the Workers runtime. See
+  [Cloudflare R2](/storage/cloudflare-r2#native-r2-binding-workers-only)
+  for how the two modes differ.
+</Aside>
+
+## Prerequisites
+
+- A Cloudflare account, with [Wrangler](https://developers.cloudflare.com/workers/wrangler/)
+  installed and authenticated (`wrangler login`)
+- A clone of the [Recipery repo](https://github.com/recipery-dev/recipery)
+  — this deploys from source, not the published container image
+
+## Configure `wrangler.jsonc`
+
+The repo's `wrangler.jsonc` declares the R2 binding the storage driver reads
+at runtime:
+
+```jsonc title="wrangler.jsonc"
+{
+  "main": "./.open-next/worker.js",
+  "name": "recipery",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "STORAGE_DRIVER": "r2"
+  },
+  "r2_buckets": [
+    {
+      "binding": "RECIPERY_BUCKET",
+      "bucket_name": "recipery"
+    }
+  ]
+}
+```
+
+<Steps>
+  <Step title="Create an R2 bucket">
+    In the Cloudflare dashboard, go to **R2 Object Storage** and create a
+    bucket. Use its name for `bucket_name` above.
+  </Step>
+  <Step title="Pick a Worker name">
+    Set `name` to whatever you want the Worker (and its default
+    `*.workers.dev` URL) to be called.
+  </Step>
+  <Step title="Set the binding name">
+    `binding` (`RECIPERY_BUCKET` by default) must match
+    `R2_BUCKET_BINDING` — leave both alone unless you have a reason to
+    rename it.
+  </Step>
+</Steps>
+
+## Build and deploy
+
+```sh
+pnpm install
+pnpm deploy:cloudflare
+```
+
+`deploy:cloudflare` runs the Cloudflare-specific build (`scripts/build-cloudflare.sh`,
+which builds with `opennextjs-cloudflare` and keeps your local `.env` out of
+the bundle) and then `opennextjs-cloudflare deploy`. To try it locally in
+the Workers runtime first, without deploying:
+
+```sh
+pnpm preview:cloudflare
+```
+
+## Other environment variables
+
+`STORAGE_DRIVER` and the R2 binding come from `wrangler.jsonc`. For
+anything else — `RECIPERY_CONTACT` — add a plain value under `vars` in
+`wrangler.jsonc`, or use a Wrangler secret for anything sensitive:
+
+```sh
+wrangler secret put RECIPERY_CONTACT
+```
+
+## Custom domains
+
+A Worker deploys to `<name>.<subdomain>.workers.dev` by default. To serve
+it from your own domain, add a [custom domain or route](https://developers.cloudflare.com/workers/configuration/routing/)
+in the Cloudflare dashboard under the Worker's **Settings**.

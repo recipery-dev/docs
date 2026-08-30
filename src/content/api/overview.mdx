@@ -1,0 +1,53 @@
+---
+title: HTTP API
+description: The internal HTTP API Recipery's own frontend calls — authentication, conventions, and every endpoint.
+sidebar:
+  order: 1
+---
+
+This is the same HTTP API Recipery's own web UI calls — there's no
+separate public API surface. It's useful for scripting against a
+self-hosted instance (bulk imports, automating collections), but it's
+**internal and unversioned**: no API keys, no stability guarantee across
+releases, and every route lives under the app's own origin (`http://localhost:3000`
+by default).
+
+## Authentication
+
+There's no login form or token endpoint — identity comes from which
+**profile** is active in the browser, tracked by the `recipery_profile`
+cookie.
+
+<Badge text="POST" variant="info" size="medium" /> **`/api/profiles/active`** sets that cookie: pass a
+profile `id`, and its `password` if the profile has one set (see
+[Profiles & Access](/features/profiles)). Every other endpoint reads the
+active profile from the cookie already on the request — script against
+this API with a cookie jar, the same way a browser session would.
+
+Three permission levels apply, checked server-side on every request that
+needs them (not just hidden in the UI):
+
+| Level | Applies to |
+| --- | --- |
+| Anyone with a valid session | Reading recipes, collections, settings; updating your own rating/favorite/cooked state |
+| The profile itself, or an admin | Editing a profile's name, color, or password |
+| Admin only | Creating/deleting profiles, deleting recipes, changing roles, changing server-wide settings (library pagination, search limit, upload size) |
+
+## Conventions
+
+- All request and response bodies are JSON, except recipe create/edit
+  (`multipart/form-data`) and file downloads (raw bytes)
+- A failed request returns a JSON body shaped `{ "error": "..." }` with a
+  4xx or 5xx status — there's no separate error-code field to switch on
+- IDs are opaque strings — recipe IDs are slugs derived from title,
+  profile and collection IDs are UUIDs
+
+## Endpoints by resource
+
+| Resource | Page |
+| --- | --- |
+| Profiles — list, create, edit, switch active profile | [Profiles](/api/profiles) |
+| Recipes — add, import from a URL, list, edit, delete, cooking activity | [Recipes](/api/recipes) |
+| Collections — list, create, edit, delete, add/remove recipes | [Collections](/api/collections) |
+| Settings — library pagination, search limit, upload size | [Settings](/api/settings) |
+| Health check and raw file downloads | [Other endpoints](/api/other-endpoints) |

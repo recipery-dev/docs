@@ -1,0 +1,47 @@
+---
+title: Settings
+description: Read and update the server-wide library pagination, search, and upload settings.
+sidebar:
+  order: 5
+---
+
+These are the install's shared settings — see the Library section in
+[Profiles & Access](/features/profiles) for what they control. A
+profile's own name, color, and password are edited through
+[`PATCH /api/profiles/:id`](/api/profiles#patch-apiprofilesid), not here.
+
+## `GET /api/settings`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Returns the current settings.
+
+**Response**
+
+```json
+{
+  "settings": {
+    "recipesPerPage": 50,
+    "searchResultLimit": 10,
+    "imageMaxSizeMb": 10
+  }
+}
+```
+
+## `PATCH /api/settings`
+
+<Badge text="PATCH" variant="warning" size="medium" /> <Badge text="Admin only" variant="danger" size="medium" />
+
+Updates one or more settings. All fields optional — only send what's
+changing.
+
+**Request body**
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `recipesPerPage` | integer 10–500 | How many recipes the Library and Favorites grids show per page |
+| `searchResultLimit` | integer 1–100 | How many results the search dialog shows before "keep typing to narrow it down" |
+| `imageMaxSizeMb` | integer 1–100 | Largest photo accepted by uploads (hero image or step photo), in MB |
+
+**Response:** `{ "settings": PublicAppSettings }`, or `400` if a field is
+outside its allowed range.

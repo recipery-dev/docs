@@ -1,0 +1,32 @@
+---
+title: Other endpoints
+description: Health check and raw file downloads.
+sidebar:
+  order: 6
+---
+
+Smaller endpoints that don't belong to one resource.
+
+## `GET /api/health`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="No session required" variant="default" size="medium" />
+
+Checks connectivity to the configured storage backend — the same probe
+used in the [Docker](/deployment/docker#health-checks) and
+[Kubernetes](/deployment/kubernetes) health checks.
+
+**Response:** `200 { "status": "ok" }`, or `503 { "status": "error", "message": string }`.
+
+## `GET /api/files/*key`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Serves a raw file straight from the storage backend — this is what backs
+recipe hero photos and step photos. Not scoped to a recipe ID; `key` is
+the full storage path, for example `recipes/<id>/image.jpg` or
+`recipes/<id>/steps/<stepId>.jpg`.
+
+**Response:** the file's bytes, with `Content-Type` inferred from the
+path and `Cache-Control: public, max-age=31536000, immutable` (safe
+since every photo is versioned by a `?v=` query param that changes on
+update). `404` if the key doesn't exist in storage.

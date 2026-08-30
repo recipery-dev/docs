@@ -1,0 +1,146 @@
+---
+title: Deploy on Kubernetes
+description: Example manifests for running Recipery in a Kubernetes cluster.
+sidebar:
+  label: Kubernetes
+  order: 3
+---
+
+There's no packaged Helm chart yet, but Recipery is a stateless
+container with no database, so it drops into a cluster with a plain
+`Deployment` and `Service`. The manifests below are a starting point —
+adapt names, namespace, and resource limits to your cluster.
+
+<Steps>
+  <Step title="Create a Secret">
+    Holds your [S3](/storage/s3) or [R2](/storage/cloudflare-r2) access
+    key and secret key.
+  </Step>
+  <Step title="Apply the Deployment and Service">
+    `kubectl apply -f` the manifests below — the image needs no volume
+    when using object storage.
+  </Step>
+  <Step title="Expose the Service">
+    Point your cluster's Ingress, Gateway, or LoadBalancer at it.
+  </Step>
+</Steps>
+
+<Aside type="caution" title="Pick an object storage backend">
+  Use [S3](/storage/s3) or [Cloudflare R2](/storage/cloudflare-r2) for
+  anything beyond a single replica. The local disk driver ties recipe
+  data to one pod's filesystem — see the note at the end of this page if
+  you still want to use it.
+</Aside>
+
+## Secret
+
+Keep storage credentials out of the Deployment spec:
+
+```yaml title="recipery-secret.yaml"
+apiVersion: v1
+kind: Secret
+metadata:
+  name: recipery-storage
+type: Opaque
+stringData:
+  S3_ACCESS_KEY: <YOUR_ACCESS_KEY>
+  S3_SECRET_KEY: <YOUR_SECRET_KEY>
+```
+
+## Deployment
+
+```yaml title="recipery-deployment.yaml"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recipery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recipery
+  template:
+    metadata:
+      labels:
+        app: recipery
+    spec:
+      containers:
+        - name: recipery
+          image: ghcr.io/recipery-dev/recipery:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: STORAGE_DRIVER
+              value: s3
+            - name: S3_BUCKET
+              value: recipery
+            - name: S3_ENDPOINT
+              value: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: recipery-storage
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: recipery-storage
+                  key: S3_SECRET_KEY
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+```
+
+`/api/health` checks connectivity to the configured storage backend and
+returns `200` when it's reachable, `503` otherwise — it's what both probes
+above use. See [Storage](/storage) for the full set of env vars per
+backend (the example uses R2 over the S3-compatible driver; swap in your
+own bucket's values, or [S3](/storage/s3)'s for AWS/MinIO/B2).
+
+## Service
+
+```yaml title="recipery-service.yaml"
+apiVersion: v1
+kind: Service
+metadata:
+  name: recipery
+spec:
+  selector:
+    app: recipery
+  ports:
+    - port: 80
+      targetPort: 3000
+```
+
+Front it with whatever your cluster already uses for ingress (an `Ingress`
+resource, a `Gateway`, or a cloud LoadBalancer) — nothing about Recipery
+requires a specific one.
+
+## Apply
+
+```sh
+kubectl apply -f recipery-secret.yaml -f recipery-deployment.yaml -f recipery-service.yaml
+```
+
+## Scaling to multiple replicas
+
+With an S3 or R2 backend, Recipery is stateless across pods — set
+`replicas` above `1` freely; every pod reads and writes the same bucket.
+
+<Aside type="note" title="Using the local driver anyway">
+  If you want the [local disk driver](/storage/local) in a cluster, keep
+  `replicas: 1` and back it with a `PersistentVolumeClaim` mounted at
+  `/app/.data` (the same path the Docker examples use) instead of the S3
+  env vars above. A `ReadWriteOnce` volume works since only one pod ever
+  attaches to it; scaling past one replica will have pods fight over —
+  or silently miss — each other's recipes.
+</Aside>

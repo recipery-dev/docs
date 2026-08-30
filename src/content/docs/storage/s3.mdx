@@ -1,0 +1,64 @@
+---
+title: S3
+description: Store recipes in AWS S3 or any S3-compatible bucket — MinIO, Backblaze B2, Cloudflare R2.
+sidebar:
+  label: S3
+  order: 2
+---
+
+The `s3` driver works with real AWS S3 and any S3-compatible store — MinIO,
+Backblaze B2, and [Cloudflare R2](/storage/cloudflare-r2) (see that page for
+R2-specific values). The container itself never needs a volume; state
+lives entirely in the bucket, so this is the backend to reach for once
+you're running more than one instance.
+
+<Steps>
+  <Step title="Create a bucket and access keys">
+    On AWS, MinIO, or B2 — whichever S3-compatible store you're using.
+  </Step>
+  <Step title="Set STORAGE_DRIVER=s3">
+    Plus `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, and `S3_ENDPOINT`
+    for anything other than real AWS.
+  </Step>
+  <Step title="Start the container">
+    No volume needed — every instance reads and writes the same bucket.
+  </Step>
+</Steps>
+
+## Configuration
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `STORAGE_DRIVER` | Yes | `s3` |
+| `S3_BUCKET` | Yes | Bucket name |
+| `S3_ACCESS_KEY` | Yes | Access key ID |
+| `S3_SECRET_KEY` | Yes | Secret access key |
+| `S3_ENDPOINT` | No | Required for MinIO/B2/R2; leave unset for real AWS S3 |
+| `S3_REGION` | No | Must match the bucket's real region on AWS; leave unset for MinIO/R2 (they use `auto`) |
+| `S3_PREFIX` | No | Scope all of Recipery's data under a subdirectory, so the bucket can be shared with other apps |
+
+## Docker
+
+```sh
+docker run -d \
+  --name recipery \
+  -p 3000:3000 \
+  -e STORAGE_DRIVER=s3 \
+  -e S3_BUCKET=recipery \
+  -e S3_ACCESS_KEY=<YOUR_ACCESS_KEY> \
+  -e S3_SECRET_KEY=<YOUR_SECRET_KEY> \
+  -e S3_REGION=<YOUR_BUCKET_REGION> \
+  ghcr.io/recipery-dev/recipery:latest
+```
+
+<Aside type="tip" title="Testing locally with MinIO">
+  Recipery's own repo ships a `docker-compose.yml` that starts the app
+  alongside a local MinIO instance and creates the bucket automatically —
+  a quick way to try the S3 path without a real cloud account. Clone
+  [the repo](https://github.com/recipery-dev/recipery) and run
+  `docker compose up`.
+</Aside>
+
+See [Deploy with Docker](/deployment/docker) for the full container
+setup, or [Deploy on Kubernetes](/deployment/kubernetes) for a manifest
+using this driver.
