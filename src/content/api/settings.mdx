@@ -1,8 +1,8 @@
 ---
 title: Settings
-description: Read and update the server-wide library pagination, search, upload, and display settings.
+description: Read and update the server-wide library pagination, search, upload, and display settings, and export a full backup.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 These are the install's shared settings — see the Library section in
@@ -47,3 +47,26 @@ changing.
 
 **Response:** `{ "settings": PublicAppSettings }`, or `400` if a field is
 outside its allowed range.
+
+## `GET /api/export`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Admin only" variant="danger" size="medium" />
+
+Streams a zip archive of the whole install — every recipe's metadata and
+photos, every profile's collections and cooking state, the profile list
+(passwords stripped down to a `hasPassword` flag), and the settings
+above. The archive mirrors the storage backend's own layout
+(`recipes/<id>/metadata.json`, `recipes/<id>/image.<ext>`, and so on)
+file-for-file, plus top-level `recipes.json`, `profiles.json`, and
+`settings.json` summaries. Nothing is buffered in memory — files stream
+straight from storage into the response — so this works the same way
+whether the library has ten recipes or ten thousand.
+
+The [shopping list](/features/shopping-list) is deliberately left out —
+it's a working list, not part of the library. There's no matching import
+endpoint yet; this is a one-way, read-only download.
+
+**Response:** `200` with `Content-Type: application/zip` and a
+`Content-Disposition: attachment` header, or `403` if the active profile
+isn't an admin (or on the public demo, where export is disabled
+entirely).

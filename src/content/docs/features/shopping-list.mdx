@@ -1,0 +1,46 @@
+---
+title: Shopping List
+description: Consolidate ingredients from multiple recipes into one checkable list.
+sidebar:
+  label: Shopping List
+  order: 5
+---
+
+<Steps>
+  <Step title="Add recipes to the list">
+    From a recipe's menu (or a card's right-click menu), toggle "Add to
+    shopping list" — or add every recipe in a collection at once from the
+    collection page.
+  </Step>
+  <Step title="Adjust servings, if needed">
+    Each added recipe gets its own servings stepper on the Shopping List
+    page, scaling that recipe's ingredients the same way the recipe
+    detail view does.
+  </Step>
+  <Step title="Shop, checking things off as you go">
+    Check off items as you pick them up. Print the list, or clear it once
+    the trip's done.
+  </Step>
+</Steps>
+
+## How ingredients are combined
+
+There's one shopping list per profile — not multiple named lists. When
+two recipes call for the same ingredient, Recipery tries to merge them
+into a single line:
+
+- Ingredients are grouped by name (case-insensitive exact match — "onion"
+  and "green onion" stay separate lines)
+- Quantities in the same unit are summed directly ("2 cups flour" + "1
+  cup flour" → "3 cups flour")
+- Quantities in different units are summed too, when both convert to
+  grams via the same density table used for
+  [ingredient gram weights](/features/library) — otherwise they're kept
+  as separate amounts on the same line rather than guessed at
+- Non-numeric quantities ("a pinch") are preserved as-is
+
+## What's not included
+
+The shopping list is deliberately excluded from [data
+exports](/api/settings#get-apiexport) — it's a working list for your
+next grocery run, not part of the library itself.

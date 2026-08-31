@@ -1,0 +1,60 @@
+---
+title: Shopping List
+description: Read and manage the active profile's shopping list — recipes on it and which items are checked off.
+sidebar:
+  order: 5
+---
+
+There's one shopping list per profile — not multiple named lists. See
+[Shopping List](/features/shopping-list) for how ingredients from
+different recipes get merged together. Every endpoint here operates on
+the active profile's own list.
+
+## `GET /api/shopping-list`
+
+<Badge text="GET" variant="info" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Returns the active profile's shopping list.
+
+**Response:** `{ "shoppingList": { "recipeIds": string[], "checkedOff": string[] } }`.
+`checkedOff` holds each checked-off ingredient's merged line key (its
+name, lowercased), not a per-recipe ingredient ID.
+
+## `DELETE /api/shopping-list`
+
+<Badge text="DELETE" variant="danger" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Clears the list — empties `recipeIds` and `checkedOff` both.
+
+**Response:** `{ "shoppingList": { "recipeIds": [], "checkedOff": [] } }`.
+
+## `POST /api/shopping-list/recipes`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Adds a recipe to the list. Idempotent — adding the same recipe twice
+doesn't duplicate it.
+
+**Request body:** `{ "recipeId": string }`
+
+**Response:** `{ "shoppingList": ShoppingList }`
+
+## `DELETE /api/shopping-list/recipes/:recipeId`
+
+<Badge text="DELETE" variant="danger" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Removes a recipe from the list.
+
+**Response:** `{ "shoppingList": ShoppingList }`
+
+## `PATCH /api/shopping-list/checked`
+
+<Badge text="PATCH" variant="warning" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Replaces the full set of checked-off line keys — the client always sends
+the complete list, not a single toggle.
+
+**Request body:** `{ "checkedOff": string[] }`
+
+**Response:** `{ "shoppingList": ShoppingList }`, or `400` if
+`checkedOff` isn't an array of strings.
