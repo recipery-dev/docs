@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: Read and update the server-wide library pagination, search, and upload settings.
+description: Read and update the server-wide library pagination, search, upload, and display settings.
 sidebar:
   order: 5
 ---
@@ -23,7 +23,8 @@ Returns the current settings.
   "settings": {
     "recipesPerPage": 50,
     "searchResultLimit": 10,
-    "imageMaxSizeMb": 10
+    "imageMaxSizeMb": 10,
+    "showIngredientGramHints": false
   }
 }
 ```
@@ -42,6 +43,7 @@ changing.
 | `recipesPerPage` | integer 10–500 | How many recipes the Library and Favorites grids show per page |
 | `searchResultLimit` | integer 1–100 | How many results the search dialog shows before "keep typing to narrow it down" |
 | `imageMaxSizeMb` | integer 1–100 | Largest photo accepted by uploads (hero image or step photo), in MB |
+| `showIngredientGramHints` | boolean | Show an approximate gram weight next to convertible ingredient quantities (e.g. "1 cup flour (~120g)"), calculated offline from a built-in density table. Off by default. |
 
 **Response:** `{ "settings": PublicAppSettings }`, or `400` if a field is
 outside its allowed range.
