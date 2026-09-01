@@ -1,6 +1,6 @@
 ---
 title: Import from a URL
-description: Paste a recipe URL and Recipery scrapes the title, ingredients, steps, and photo automatically.
+description: Paste a recipe URL and Recipery scrapes the title, ingredients, steps, and photo automatically — YouTube links too.
 sidebar:
   label: Import from a URL
   order: 4
@@ -8,7 +8,8 @@ sidebar:
 
 <Steps>
   <Step title="Paste a URL">
-    Any page that publishes a recipe — most cooking sites do.
+    Any page that publishes a recipe — most cooking sites do — or a
+    YouTube video link.
   </Step>
   <Step title="Recipery scrapes it">
     Title, ingredients, steps, servings, prep/cook time, cuisine, tags,
@@ -39,6 +40,22 @@ sidebar:
   off. See the environment reference in
   [Deploy with Docker](/deployment/docker#environment-reference).
 </Aside>
+
+## Importing from YouTube
+
+A YouTube link doesn't carry `Recipe` JSON-LD like a cooking site does,
+so it's handled differently: Recipery pulls the title, channel name, and
+thumbnail from YouTube's oEmbed endpoint and attaches the video to the
+recipe (see [Video](/features/library#video)) — that part always works.
+
+As a bonus, it also scans the video's description for a recipe, since
+cooking channels often paste one in. It looks for lines shaped like an
+ingredient ("500g flour", "1 tsp salt") and numbered steps ("1. Preheat
+the oven"), skipping timestamps, links, and promotional text. When it
+finds something, those become the recipe's ingredients and steps; when
+it doesn't, they're left empty for you to fill in from the video. Either
+way, double-check what comes in — description formatting varies a lot
+from channel to channel.
 
 Prefer typing a recipe in yourself, or a site doesn't publish structured
 data? See [Library & Recipes](/features/library) for adding one by hand.

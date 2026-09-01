@@ -31,6 +31,7 @@ Creates a recipe by hand. `multipart/form-data`:
 | `title` | string | Yes | |
 | `source` | string | No | Author or site name |
 | `sourceUrl` | string | No | |
+| `videoUrl` | string | No | Must be http/https; a YouTube link embeds in the recipe view, anything else shows as a "Watch the video" link |
 | `description` | string | No | |
 | `servings` | number | No | |
 | `prepMinutes` | number | No | |
@@ -51,12 +52,16 @@ Creates a recipe by hand. `multipart/form-data`:
 <Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
 
 Imports a recipe from a URL — see [Import from a URL](/features/import)
-for how the scraper works.
+for how the scraper works. A YouTube URL is handled separately: it
+always sets `videoUrl`, `title`, `source` (channel name), and the cover
+photo from YouTube's oEmbed endpoint, and best-effort parses ingredients
+and steps out of the video description when it finds any.
 
 **Request body:** `{ "url": string }`
 
 **Response:** `201` with `{ "recipe": RecipeRecord }`, `400` if `url` is
-missing or not http/https, or `422` if the page has no scrapeable recipe.
+missing or not http/https, or `422` if the page has no scrapeable recipe
+(YouTube URLs only 422 when the video itself can't be found).
 
 ## `POST /api/recipes/:id/edit`
 
