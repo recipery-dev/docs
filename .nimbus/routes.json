@@ -17,6 +17,7 @@
     "/deployment/kubernetes",
     "/features",
     "/features/collections",
+    "/features/discover",
     "/features/import",
     "/features/library",
     "/features/profiles",

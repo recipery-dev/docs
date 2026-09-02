@@ -1,0 +1,82 @@
+---
+title: Discover & Find Similar
+description: Search other recipe sites from inside Recipery, either browsing for something new to cook or looking for another take on a recipe you already have.
+sidebar:
+  label: Discover & Find Similar
+  order: 5
+---
+
+Recipery can search other recipe sites without leaving the app — two ways
+in, same underlying search:
+
+- **Discover** — open-ended browsing when you don't know what to cook yet
+- **Find Similar** — from a recipe already in your library, pull up other
+  takes on it from the same sites
+
+Both draw on the same list of sites, configured once in **Settings →
+Recipe Discovery** (admin only).
+
+<Steps>
+  <Step title="Add a source">
+    Settings → Recipe Discovery ships with NYT Cooking, BBC Good Food, and
+    BBC Food out of the box — add, remove, or reorder sites to fit what you
+    actually use.
+  </Step>
+  <Step title="Search">
+    Open **Discover** from the sidebar and type what you're after, or open
+    **Find Similar** on a recipe — it searches using that recipe's own
+    title, no typing required.
+  </Step>
+  <Step title="Preview, then import">
+    Tap a result to preview it — title, photo, ingredients, steps — before
+    deciding whether it's worth adding. Nothing joins your library until
+    you import it.
+  </Step>
+</Steps>
+
+## Setting up sources
+
+Each source is just a name and a search URL template with a `{query}`
+placeholder where the search term goes:
+
+```text
+Name:            NYT Cooking
+Search URL:      https://cooking.nytimes.com/search?q={query}&include_content=articles
+```
+
+Any site with a query-string search works — paste in its search URL with
+your test term swapped out for `{query}`. Drag to reorder; the order here
+is the tab order in Discover and Find Similar.
+
+## Discover
+
+Open **Discover** in the sidebar, type a dish or ingredient, and hit
+search. With more than one source configured, results are split into tabs
+— one per site — so you can compare across all of them without leaving the
+drawer.
+
+## Find Similar
+
+From a recipe's menu, **Find Similar** searches every configured source
+using that recipe's title as the query automatically — useful for
+comparing a recipe already in your library against other versions of it
+elsewhere, or finding a substitute when you don't love the one you have.
+
+## How results are found
+
+There's no shared search API across recipe sites, so Recipery reads
+whatever structured data the site's own search page already ships — the
+JSON data blob behind a server-rendered page (common on Next.js-based
+sites like NYT Cooking and BBC Good Food), or a generic schema.org
+`ItemList`, a common way for search pages to mark up a list of links for
+search engines. Neither is guaranteed to exist on a given site: if
+neither is found, that source's tab shows an error with a link to open
+the search directly on the site instead of failing silently.
+
+## Importing a result
+
+Opening a result's preview scrapes it the same way as
+[pasting its URL directly](/features/import) — same ingredients, steps,
+and photo extraction, same YouTube handling if the result happens to be a
+video. Importing from the preview adds it to your library like any other
+recipe.

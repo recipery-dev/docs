@@ -44,9 +44,10 @@ sidebar:
 ## Importing from YouTube
 
 A YouTube link doesn't carry `Recipe` JSON-LD like a cooking site does,
-so it's handled differently: Recipery pulls the title, channel name, and
-thumbnail from YouTube's oEmbed endpoint and attaches the video to the
-recipe (see [Video](/features/library#video)) — that part always works.
+so it's handled differently: Recipery pulls the title and channel name
+from YouTube's oEmbed endpoint, grabs a clean thumbnail straight from the
+video ID, and attaches the video to the recipe (see
+[Video](/features/library#video)) — that part always works.
 
 As a bonus, it also scans the video's description for a recipe, since
 cooking channels often paste one in. It looks for lines shaped like an
@@ -59,3 +60,6 @@ from channel to channel.
 
 Prefer typing a recipe in yourself, or a site doesn't publish structured
 data? See [Library & Recipes](/features/library) for adding one by hand.
+
+Don't have a URL in mind yet? [Discover & Find Similar](/features/discover)
+searches recipe sites for you, right from the library.
