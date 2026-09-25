@@ -13,7 +13,8 @@
       "description": "One PR for all non-major npm updates",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "non-major dependencies"
+      "groupName": "non-major dependencies",
+      "automerge": true
     },
     {
       "description": "Majors get their own PR and a label, so they are easy to review",
