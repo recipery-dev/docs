@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitsDisabled"],
+  "commitMessagePrefix": "chore(deps):",
+  "timezone": "Europe/Berlin",
+  "prConcurrentLimit": 5,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": false
+  },
+  "packageRules": [
+    {
+      "description": "One PR for all non-major npm updates",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies"
+    },
+    {
+      "description": "Majors get their own PR and a label, so they are easy to review",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "description": "Astro, its tooling, and the docs theme move together on majors",
+      "matchPackageNames": ["astro", "@astrojs/check", "@cloudflare/nimbus-docs"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "astro"
+    },
+    {
+      "description": "One PR for GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "ci"
+    },
+    {
+      "description": "The Node major is our runtime choice, not an automatic bump",
+      "matchPackageNames": ["node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
