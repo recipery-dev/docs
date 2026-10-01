@@ -76,6 +76,21 @@ existing record and deletes any now-orphaned step photos.
 doesn't exist, `400` if `title` is missing, `413` if a photo is too
 large.
 
+## `POST /api/recipes/:id/duplicate`
+
+<Badge text="POST" variant="success" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
+
+Duplicates a recipe — copies its metadata and photos (hero and step
+images) under a new id, derived the same way as a title's (see above,
+deduplicated with a numeric suffix if needed). The copy's title gets a
+" (Copy)" suffix and `addedAt` is reset to now; everything else,
+including `sourceUrl`, carries over unchanged. The copy has no
+per-profile state (rating, favorite, cooked) — `PATCH /api/recipes/:id`
+below starts it fresh, same as any new recipe.
+
+**Response:** `201` with `{ "recipe": RecipeRecord }`, or `404` if the
+recipe doesn't exist.
+
 ## `PATCH /api/recipes/:id`
 
 <Badge text="PATCH" variant="warning" size="medium" /> <Badge text="Any session" variant="default" size="medium" />
