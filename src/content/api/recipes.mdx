@@ -39,10 +39,17 @@ Creates a recipe by hand. `multipart/form-data`:
 | `difficulty` | `"easy" \| "medium" \| "hard"` | No | |
 | `cuisine` | string | No | |
 | `tags` | JSON string | No | JSON array of strings |
-| `ingredients` | JSON string | No | JSON array of `{ quantity?, unit?, name, note? }` |
+| `ingredients` | JSON string | No | JSON array of `{ quantity?, unit?, name, note?, isGroup? }` |
 | `steps` | JSON string | No | JSON array of `{ id?, text }` |
 | `image` | file | No | Hero photo; rejected with `413` past the server's upload size limit — see [Settings](/api/settings) |
 | `step-image-<stepId>` | file | No | One field per step that has a photo, keyed by that step's `id` in the `steps` JSON |
+
+Array order is display order for both `ingredients` and `steps` — there's
+no separate ordering field, so reordering means resending the array in
+the new order. An `ingredients` entry with `isGroup: true` is a section
+header, not an ingredient: `name` holds the header text and
+`quantity`/`unit`/`note` are ignored (the server clears them even if
+sent).
 
 **Response:** `201` with `{ "recipe": RecipeRecord }`, or `400` if
 `title` is missing, `413` if a photo is too large.
