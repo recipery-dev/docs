@@ -1,0 +1,130 @@
+---
+title: Connect Claude (MCP)
+description: Let Claude and other MCP clients search, add, and organize your recipes through Recipery's built-in MCP endpoint.
+sidebar:
+  label: Connect Claude (MCP)
+  order: 7
+---
+
+Recipery has a built-in [MCP](https://modelcontextprotocol.io) endpoint at
+`/api/mcp`. Connect an MCP client such as Claude to it and you can say
+things like "add the lasagna from this link", "find something quick with
+chicken", or "put everything for Friday's dinner on the shopping list" —
+and it happens in your library.
+
+There's nothing to install or turn on. The endpoint is part of the app,
+and it works the same on Docker, Kubernetes, and a plain `pnpm start`.
+
+<Aside type="caution">
+  The MCP endpoint has **no login**, just like the rest of the app. Anyone
+  who can reach your Recipery can use it. Keep Recipery on a private
+  network such as [Tailscale](https://tailscale.com), or put it behind a
+  reverse proxy that handles authentication.
+</Aside>
+
+## Connect a client
+
+Settings → MCP shows these commands filled in with your own address, with
+a copy button on each.
+
+<Steps>
+  <Step title="Find your endpoint address">
+    It's your Recipery address plus `/api/mcp`, for example
+    `http://recipes.tailnet-name.ts.net:3000/api/mcp`.
+  </Step>
+  <Step title="Add it to your client">
+    For Claude Code, run this once:
+
+    ```sh
+    claude mcp add --transport http recipery http://localhost:3000/api/mcp
+    ```
+
+    For Claude Desktop, add this to `claude_desktop_config.json` and restart
+    the app. It uses the small `mcp-remote` helper, which runs on your own
+    computer. `--allow-http` is only needed for plain `http://` addresses:
+
+    ```json
+    {
+      "mcpServers": {
+        "recipery": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "http://localhost:3000/api/mcp", "--allow-http"]
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Ask for something">
+    Try "what recipes do I have with lentils?" or "import
+    https://example.com/best-lasagna".
+  </Step>
+</Steps>
+
+### Where it can and can't connect
+
+The client has to be able to reach your Recipery address. Claude Code and
+Claude Desktop (through `mcp-remote`) run on your own computer, so a
+private address such as a Tailscale name works fine.
+
+Claude on the web and the Claude mobile app connect from Anthropic's
+servers instead, so they can't reach a private address. They only work if
+you expose Recipery to the internet — and because the endpoint has no
+login, don't do that without something in front of it that does.
+
+## What it can do
+
+The tools match what you can do in the app. Read-only tools are marked so
+your client can approve them automatically.
+
+| Area | Tools |
+| --- | --- |
+| Recipes | `search_recipes`, `get_recipe`, `create_recipe`, `update_recipe`, `delete_recipe`, `duplicate_recipe`, `import_recipe_from_url`, `discover_recipes`, `set_recipe_state` |
+| Collections | `list_collections`, `create_collection`, `update_collection`, `delete_collection`, `add_recipe_to_collection`, `remove_recipe_from_collection` |
+| Shopping list | `get_shopping_list`, `add_recipe_to_shopping_list`, `remove_recipe_from_shopping_list`, `set_shopping_items_checked`, `clear_shopping_list` |
+
+Read-only: `search_recipes`, `get_recipe`, `discover_recipes`,
+`list_collections`, and `get_shopping_list`.
+
+A few things to know:
+
+- **Updates are partial.** `update_recipe` only changes the fields you
+  send. Pass `null` to clear a field. Sending `ingredients` or `steps`
+  replaces the whole list; a step keeps its photo when its text is
+  unchanged.
+- **`set_recipe_state`** sets your rating (1–5, or 0 to clear), favorite,
+  and cooked flags.
+- **`delete_recipe`** only works when the MCP profile is an admin, the
+  same rule as the app.
+- **No photo uploads yet.** A recipe made through MCP has no cover photo
+  unless it came from `import_recipe_from_url`, which saves the page's
+  photo. Add one from the app later.
+- **Not included:** profiles and passwords, settings changes, and backups.
+  These stay in the app.
+
+## Which profile it acts as
+
+Ratings, favorites, collections, and the shopping list belong to a
+profile, and the MCP endpoint has no browser session to tell it which one.
+By default it acts as your **first admin profile**. To use a different
+one, set the `MCP_PROFILE_ID` environment variable to that profile's ID
+and restart:
+
+```sh
+MCP_PROFILE_ID=3f6c1d52-8a0e-4c35-9c43-3d7f3a3c2a10
+```
+
+Profile IDs are in the `GET /api/profiles` response. If the ID doesn't
+match any profile, MCP requests fail with an error that says so.
+
+## The read-only demo
+
+The public demo blocks every write, and MCP requests are blocked with them.
+Self-host Recipery to try it on your own recipes.
+
+## Security notes
+
+Besides the missing login, the endpoint refuses any request that carries
+an `Origin` header for a different site, so a web page you have open can't
+use it. MCP clients such as Claude Code don't send that header, so they're
+not affected. This does not replace keeping Recipery off the public
+internet.

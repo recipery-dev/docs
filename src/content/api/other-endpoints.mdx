@@ -1,6 +1,6 @@
 ---
 title: Other endpoints
-description: Health check and raw file downloads.
+description: Health check, raw file downloads, and the MCP endpoint.
 sidebar:
   order: 7
 ---
@@ -30,3 +30,21 @@ the full storage path, for example `recipes/<id>/image.jpg` or
 path and `Cache-Control: public, max-age=31536000, immutable` (safe
 since every photo is versioned by a `?v=` query param that changes on
 update). `404` if the key doesn't exist in storage.
+
+## `POST /api/mcp`
+
+<Badge text="POST" variant="info" size="medium" /> <Badge text="No session required" variant="default" size="medium" />
+
+The [MCP](/features/mcp) endpoint, using the Streamable HTTP transport in
+stateless mode: every request is a standalone JSON-RPC message and the
+reply is plain JSON. There are no sessions, and no streaming.
+
+Send `Content-Type: application/json` and
+`Accept: application/json, text/event-stream`. Tools act as the profile set
+by `MCP_PROFILE_ID`, or the first admin when it isn't set — the
+`recipery_profile` cookie is ignored here.
+
+**Response:** a JSON-RPC response. A tool that fails (an unknown recipe, a
+bad rating) still answers `200`, with `isError: true` in the tool result.
+`403` for a request with an `Origin` header from another site, `405` for
+`GET` and `DELETE`, and `403` for every request on the read-only demo.
